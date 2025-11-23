@@ -1,0 +1,28 @@
+---
+- name: Enforce Linux Security Guidelines
+  hosts: all
+  become: yes
+
+  vars:
+    allowed_ssh_users:
+      - ubuntu
+      - ec2-user
+    password_max_days: 90
+    password_min_days: 7
+    ssh_port: 22
+
+  tasks:
+
+    #Ensure latest security patches
+    - name: Install security updates (Debian/Ubuntu)
+      apt:
+        upgrade: dict
+        update_caches: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install security updates (RHEL/CentOS)
+      yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+       

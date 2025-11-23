@@ -1,0 +1,13 @@
+---
+- name: Configure weekly reboot using cron
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Create cron job for weekly reboot
+      cron:
+        name: "Weekly System Reboot"
+        weekday: "sun"
+        hour: "3"
+        minute: "0"
+        job: "/sbin/shutdown -r now"

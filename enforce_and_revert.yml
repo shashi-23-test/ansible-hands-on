@@ -1,0 +1,36 @@
+---
+- name: Enforce config and auto-revert drift
+  hosts: all
+  become: yes
+
+  vars:
+    config_path: /etc/myapp/config.conf
+    desired_config: files/config.conf
+
+  tasks:
+
+    # Check the current file hash on the system
+    - name: Calculate current system config checksum
+      stat:
+        path: "{{ config_path }}"
+        checksum_algorithm: sha256
+      register: current_file
+
+    # Calculate desired file hash
+    - name: Calculate desired config checksum
+      stat:
+        path: "{{ desired_config }}"
+        checksum_algorithm: sha256
+      delegate_to: localhost
+      register: desired_file
+
+    # if checksum diff -> revert immediately
+    - name: Revert config if drift detected
+      copy:
+        src: "{{ desired_config }}"
+        dest: "{{ config_path }}"
+        owner: root
+        group: root
+        mode: '0644'
+      when: current_file.stat.checksum != desired_file.stat.checksum
+      notify: restart_service
